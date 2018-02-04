@@ -115,46 +115,35 @@ class Ui_MainWindow(object):
         linhas = len(leitura)
         name = QtGui.QFileDialog.getSaveFileName(caption='Salvar Arquivo')
         f = open(str(name.toUtf8()).decode('utf-8')+".cup","w")
-        out2 = []
-        out3 = []
+        
         #checar o tamanho da variação de segundos de uma linha para outra
-        variacao1 = int(leitura[2][5:7]) - int(leitura[1][5:7])
-        variacao2 = int(leitura[1][5:7]) - int(leitura[0][5:7])
-        # verificando qual das duas variaçoes é > 0 e colocando o resultado numa variavel
-        variacaolinha = 0
-        if (variacao1 > 0):
-            variacaolinha = variacao1
-        else:
-            variacaolinha = variacao2
-        variacaolinha = int(variacaolinha)
+        #verificando qual das duas variaçoes é > 0 e colocando o resultado numa variavel
+        variacaolinha = int(leitura[2][5:7]) - int(leitura[1][5:7])
+        if ( variacaolinha == 0 ):
+          variacaolinha = int(leitura[1][5:7]) - int(leitura[0][5:7])
+                  
         #calcular o delta por todo o arquivo
-        n = 0
         z = 1
-        while (int(z) < int(linhas)):
-      
-           calculo1 = float(leitura[z][31:35]) -float(leitura[n][31:35])
-           calculo = float(calculo1)/float(variacaolinha)
+        i = 1
+        calculo0 = float(leitura[z-1][31:35])
+        while (int(z) < int(linhas)):      
+           #identifica as termais e coloca em out2
+           calculo = (float(leitura[z][31:35]) - float(calculo0)) / float(variacaolinha)
+           calculo0 = float(leitura[z][31:35])
            if (float(calculo) >= float(subida)):
-             out2.append(leitura[n])
-             n +=1
-             z +=1
-           else:
-             n +=1
-             z +=1
-        for i,linha in enumerate(out2):
-          linha     = linha.strip()
-          altura    = re.findall(r'(?<=A\d{5})\d{5}', linha)[0]
-          alturaint = int(altura) #alguns registros tem que tirar o -5 pela ausência dos 00000
-          latitude  = linha[7:15] # linha[7:14] + linha[14]
-          longitude = linha[15:24] # linha[15:23] + linha[23]
-          lat       = latitude[:4] + "." + latitude[4:]
-          long      = longitude[:5] + "." + longitude[5:]
-          if out3:
-              wp = Waypoint(None,"",lat,long,alturaint,wp.id+1)
-          else:
-              wp = Waypoint(None,"",lat,long,alturaint)
-          out3.append(str(wp))
-          print >>f, wp
+             linha = leitura[z-1]
+             linha = linha.strip()
+             altura    = re.findall(r'(?<=A\d{5})\d{5}', linha)[0]
+             alturaint = int(altura) #alguns registros tem que tirar o -5 pela ausência dos 00000
+             latitude  = linha[7:15] # linha[7:14] + linha[14]
+             longitude = linha[15:24] # linha[15:23] + linha[23]
+             lat       = latitude[:4] + "." + latitude[4:]
+             long      = longitude[:5] + "." + longitude[5:]
+             wp = Waypoint(None,"",lat,long,alturaint,i)
+             i += 1
+             print >>f, wp
+           z +=1
+          
         f.flush()
         f.close()
         self.sucesso.show()
